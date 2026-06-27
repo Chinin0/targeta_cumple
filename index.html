@@ -173,7 +173,7 @@
   </main>
 
   <button id="musicBtn" title="Música">🔊</button>
-  <div id="yt"></div>
+  <audio id="bgm" src="musica.mp3" loop preload="auto"></audio>
 
 <script>
 /* ===== Balloons ===== */
@@ -227,38 +227,22 @@ document.getElementById('cake').addEventListener('click',function(){
   this.animate([{transform:'scale(1)'},{transform:'scale(1.3) rotate(8deg)'},{transform:'scale(1)'}],{duration:600,easing:'ease-out'});
 });
 
-/* ===== Music (YouTube IFrame API, audio only) ===== */
-var VIDEO_ID="OtY512Euakg";
-var ytPlayer=null, ytReady=false, isPlaying=false, wantSound=false;
-window.onYouTubeIframeAPIReady=function(){
-  ytPlayer=new YT.Player('yt',{
-    videoId:VIDEO_ID,
-    playerVars:{autoplay:1,mute:1,controls:0,disablekb:1,loop:1,playlist:VIDEO_ID,playsinline:1},
-    events:{
-      onReady:function(){
-        ytReady=true;
-        try{ytPlayer.mute();ytPlayer.playVideo();}catch(e){}
-        if(wantSound)enableSound();
-      },
-      onStateChange:function(e){
-        if(e.data===YT.PlayerState.ENDED){try{ytPlayer.seekTo(0);ytPlayer.playVideo();}catch(err){}}
-      }
-    }
-  });
-};
-(function(){var s=document.createElement('script');s.src="https://www.youtube.com/iframe_api";document.head.appendChild(s);})();
-
+/* ===== Music (archivo MP3 local) ===== */
+var bgm=document.getElementById('bgm');
+var isPlaying=false;
 function enableSound(){
-  wantSound=true;
-  if(ytReady && ytPlayer){
-    try{ytPlayer.unMute();ytPlayer.setVolume(75);ytPlayer.playVideo();isPlaying=true;updateBtn();}catch(e){}
-  }
+  if(!bgm)return;
+  bgm.volume=0.75;
+  var p=bgm.play();
+  if(p&&p.then){p.then(function(){isPlaying=true;updateBtn();}).catch(function(){isPlaying=false;updateBtn();});}
+  else{isPlaying=true;updateBtn();}
 }
 function updateBtn(){var b=document.getElementById('musicBtn');b.style.opacity=isPlaying?'1':'0.45';b.title=isPlaying?'Pausar musica':'Reproducir musica';}
-document.getElementById('musicBtn').addEventListener('click',function(){
-  if(!ytReady||!ytPlayer){wantSound=true;return;}
-  if(isPlaying){ytPlayer.pauseVideo();isPlaying=false;}
-  else{ytPlayer.unMute();ytPlayer.setVolume(75);ytPlayer.playVideo();isPlaying=true;}
+document.getElementById('musicBtn').addEventListener('click',function(e){
+  e.stopPropagation();
+  if(!bgm)return;
+  if(isPlaying){bgm.pause();isPlaying=false;}
+  else{bgm.volume=0.75;bgm.play();isPlaying=true;}
   updateBtn();
 });
 
